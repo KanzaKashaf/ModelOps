@@ -141,6 +141,31 @@ def main() -> None:
 
     REPORT_DIR.mkdir(parents=True, exist_ok=True)
     (REPORT_DIR / "mlflow_runs.json").write_text(json.dumps(all_results, indent=2))
+
+    # Generate manifests for each trained model
+    from modelops.tracking.manifest import (
+        build_manifest,
+        get_registered_version,
+        write_manifest,
+    )
+
+    manifest_paths = {}
+    for model_name, result in all_results.items():
+        version = get_registered_version(result["run_id"], REGISTERED_MODEL_NAME)
+        local_artifact = ARTIFACT_DIR / f"{model_name}.joblib"
+        manifest = build_manifest(
+            model_name=model_name,
+            run_id=result["run_id"],
+            registered_model_version=version,
+            local_artifact_path=local_artifact,
+            train_data_hash=run_metadata["train_data_hash"],
+            test_metrics=result["test"],
+        )
+        manifest_path = write_manifest(manifest)
+        manifest_paths[model_name] = str(manifest_path)
+        print(f"Manifest written: {manifest_path}")
+
+    (REPORT_DIR / "manifests.json").write_text(json.dumps(manifest_paths, indent=2))
     print("Done. Open MLflow UI at http://127.0.0.1:5000")
 
 
