@@ -38,6 +38,12 @@ jobs:
           python -m ruff --version
           python -m ruff check .
 
+      - name: Debug package install
+        run: |
+          python -c "import modelops; print(modelops.__file__)"
+          python -c "import modelops.data; print(modelops.data.__file__)"
+          python -c "import sys; print([p for p in sys.path if 'src' in p or 'ModelOps' in p])"
+
       - name: Run tests
         run: pytest
 
