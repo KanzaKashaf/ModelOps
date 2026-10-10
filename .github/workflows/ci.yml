@@ -12,6 +12,13 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - name: Debug checked-out commit and imports
+        run: |
+          git log -1 --oneline
+          git status --short
+          python -m pip show ruff
+          python -m ruff check tests/test_model_reload.py --diff
+
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
