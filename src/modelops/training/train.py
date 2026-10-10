@@ -6,7 +6,7 @@ import json
 import platform
 import random
 import subprocess
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
 
 import joblib
@@ -25,7 +25,6 @@ from modelops.training.preprocessing import build_preprocessor, get_feature_colu
 
 ARTIFACT_DIR = Path("models")
 REPORT_DIR = Path("reports")
-SEED = 42
 
 
 def _set_global_seeds(seed: int) -> None:
@@ -63,15 +62,15 @@ def train_model(
 
     pipeline = Pipeline(steps=[("preprocessor", preprocessor), ("model", estimator)])
 
-    X_train = train_df[features]
+    x_train = train_df[features]
     y_train = train_df[TARGET_COLUMN]
-    X_test = test_df[features]
+    x_test = test_df[features]
     y_test = test_df[TARGET_COLUMN]
 
-    pipeline.fit(X_train, y_train)
+    pipeline.fit(x_train, y_train)
 
-    train_pred = pipeline.predict(X_train)
-    test_pred = pipeline.predict(X_test)
+    train_pred = pipeline.predict(x_train)
+    test_pred = pipeline.predict(x_test)
 
     metrics = {
         "model_name": model_name,
@@ -80,7 +79,7 @@ def train_model(
         "seed": SEED,
         "git_commit": _git_commit(),
         "python_version": platform.python_version(),
-        "timestamp": datetime.now(timezone.utc).isoformat(),
+        "timestamp": datetime.now(UTC).isoformat(),
         "n_train": len(train_df),
         "n_test": len(test_df),
     }

@@ -1,5 +1,4 @@
 """Tests for data validation."""
-import pandas as pd
 import pytest
 from pandera.errors import SchemaError
 
