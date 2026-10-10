@@ -28,3 +28,25 @@
   extensible but untested on categorical data.
 - Spatial autocorrelation not modelled; random split may overestimate
   generalisation to unseen geographic areas.
+
+
+
+## Registered Model
+
+- MLflow model name: `modelops-housing-regressor`
+- Current champion version: v9 (gradient_boosting)
+- Champion alias: `@champion`
+- MLflow tracking URI: `http://127.0.0.1:5000`
+- Manifest: `manifests/gradient_boosting-v9.json`
+- Artifact SHA-256: `39e692462c0cb483246d641dbc758756c88a4a776f078d74d98a6d86b5949f61`
+- Train data hash: `12bfd88874257882278818367f28bb018f80ad6397a0ad57fc1c652060ce8a72`
+
+## Promotion History (local)
+
+| Version | Model             | Test MAE | Promoted At            | Decision  |
+|---------|-------------------|----------|------------------------|-----------|
+| v9      | gradient_boosting | 0.3484   | 2026-10-10T20:07:43Z   | Approved  |
+| v8      | ridge             | 0.5332   | N/A                    | Rejected  |
+| v7      | baseline_dummy    | 0.9061   | N/A                    | Rejected  |
+
+Rejection reasons are recorded in `reports/promotion_log.jsonl`.
