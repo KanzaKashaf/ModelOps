@@ -1,9 +1,9 @@
 """Tests for data validation."""
 import pytest
-from pandera.errors import SchemaError
 
 from modelops.data.loader import load_dataset
 from modelops.data.validation import validate_dataset
+from pandera.errors import SchemaError
 
 
 def test_valid_dataset_passes():
