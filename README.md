@@ -19,6 +19,3 @@ See [docs/architecture.md](docs/architecture.md).
 - `main` — protected branch, always deployable.
 - Feature branches: `feature/<short-description>`
 - Pull requests require passing CI before merge.
-
-
-dfdfgs
