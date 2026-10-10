@@ -14,7 +14,7 @@ from __future__ import annotations
 
 import json
 import platform
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
 
 from mlflow.tracking import MlflowClient
@@ -67,7 +67,7 @@ def build_manifest(
         "dependencies": dependency_versions(),
         "python_version": platform.python_version(),
         "platform": platform.platform(),
-        "created_at": datetime.now(timezone.utc).isoformat(),
+        "created_at": datetime.now(UTC).isoformat(),
         "tracking_uri": get_tracking_uri(),
     }
 

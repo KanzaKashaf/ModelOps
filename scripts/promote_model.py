@@ -9,7 +9,7 @@ from __future__ import annotations
 import argparse
 import json
 import sys
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
 
 # Ensure the src layout is importable even without an editable install.
@@ -49,7 +49,7 @@ def main() -> int:
 
     # Audit log: capture every decision, including dry-runs
     log_entry = {
-        "timestamp": datetime.now(timezone.utc).isoformat(),
+        "timestamp": datetime.now(UTC).isoformat(),
         "manifest_path": str(args.manifest),
         "model_name": manifest["model_name"],
         "registered_model_version": manifest.get("registered_model_version"),
