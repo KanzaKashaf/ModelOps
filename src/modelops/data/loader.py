@@ -1,8 +1,6 @@
 """Dataset loading utilities."""
 from __future__ import annotations
 
-from urllib.error import URLError
-
 import numpy as np
 import pandas as pd
 from sklearn.datasets import fetch_california_housing
@@ -34,5 +32,5 @@ def load_dataset() -> pd.DataFrame:
     try:
         bunch = fetch_california_housing(as_frame=True)
         return bunch.frame.copy()
-    except (OSError, URLError):
+    except Exception:
         return _generate_synthetic_dataset()
