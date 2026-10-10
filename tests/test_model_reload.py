@@ -55,7 +55,7 @@ import joblib
 import numpy as np
 import pytest
 
-from modelops.data.loader import TARGET_COLUMN, load_dataset
+from modelops.data.loader import load_dataset
 from modelops.data.split import split_dataset
 from modelops.training.preprocessing import get_feature_columns
 
