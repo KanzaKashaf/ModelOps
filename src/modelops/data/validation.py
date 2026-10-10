@@ -1,8 +1,8 @@
 """Schema validation for the California Housing dataset using pandera."""
 from __future__ import annotations
 
-import pandera.pandas as pa
 import pandas as pd
+import pandera.pandas as pa
 from pandera.typing import DataFrame, Series
 
 from modelops.data.loader import TARGET_COLUMN
