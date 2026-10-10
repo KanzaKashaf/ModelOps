@@ -100,17 +100,27 @@ jobs:
           MLFLOW_TRACKING_URI: http://127.0.0.1:5000
         run: python -m modelops.training.train_mlflow
 
+      - name: Locate generated manifests
+        id: manifests
+        run: |
+          GB_MANIFEST=$(ls manifests/gradient_boosting-v*.json | sort -V | tail -n1)
+          RIDGE_MANIFEST=$(ls manifests/ridge-v*.json | sort -V | tail -n1)
+          echo "gb=$GB_MANIFEST" >> "$GITHUB_OUTPUT"
+          echo "ridge=$RIDGE_MANIFEST" >> "$GITHUB_OUTPUT"
+          echo "Selected GB manifest: $GB_MANIFEST"
+          echo "Selected Ridge manifest: $RIDGE_MANIFEST"
+
       - name: Verify gradient_boosting promotion approved (dry-run)
         env:
           MLFLOW_TRACKING_URI: http://127.0.0.1:5000
         run: |
-          python scripts/promote_model.py manifests/gradient_boosting-v1.json --dry-run
+          python scripts/promote_model.py "${{ steps.manifests.outputs.gb }}" --dry-run
 
       - name: Verify Ridge promotion rejected (dry-run)
         env:
           MLFLOW_TRACKING_URI: http://127.0.0.1:5000
         run: |
-          if python scripts/promote_model.py manifests/ridge-v2.json --dry-run; then
+          if python scripts/promote_model.py "${{ steps.manifests.outputs.ridge }}" --dry-run; then
             echo "ERROR: Ridge should have been rejected"
             exit 1
           else
@@ -121,7 +131,7 @@ jobs:
         env:
           MLFLOW_TRACKING_URI: http://127.0.0.1:5000
         run: |
-          python scripts/promote_model.py manifests/gradient_boosting-v1.json
+          python scripts/promote_model.py "${{ steps.manifests.outputs.gb }}"
 
       - name: Upload MLflow server log on failure
         if: failure()
