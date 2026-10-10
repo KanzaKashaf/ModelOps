@@ -9,15 +9,19 @@ on:
 jobs:
   quality:
     runs-on: ubuntu-latest
-    steps:
+    steps:      
       - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
 
-      - name: Debug checked-out commit and imports
+
+      - name: Diagnose Ruff import sorting
         run: |
           git log -1 --oneline
-          git status --short
-          python -m pip show ruff
-          python -m ruff check tests/test_model_reload.py --diff
+          python -m pip install ruff==0.16.10
+          python -m ruff --version
+          python -m ruff check tests/test_model_reload.py tests/test_split.py tests/test_validation.py --diff || true
+
 
       - name: Set up Python
         uses: actions/setup-python@v5
@@ -40,8 +44,11 @@ jobs:
   data-and-model:
     runs-on: ubuntu-latest
     needs: quality
-    steps:
+    steps:      
       - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+
       - uses: actions/setup-python@v5
         with:
           python-version: "3.11"
