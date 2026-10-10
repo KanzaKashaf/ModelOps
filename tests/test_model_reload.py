@@ -42,17 +42,29 @@
 #     np.testing.assert_allclose(direct_preds, manual_preds, rtol=1e-10)
 
 
-"""Verify that saved pipelines can be reloaded and used for prediction."""
+"""Verify that saved pipelines can be reloaded and used for prediction.
+
+These tests require a trained model artifact. They are skipped if the
+artifact does not exist, so that the pure-code CI job can pass without
+needing to train a model first. The data-and-model CI job trains the
+model and then runs these tests against the real artifact.
+"""
+from pathlib import Path
 
 import joblib
 import numpy as np
 import pytest
 
-from modelops.data.loader import load_dataset
+from modelops.data.loader import TARGET_COLUMN, load_dataset
 from modelops.data.split import split_dataset
 from modelops.training.preprocessing import get_feature_columns
 
-ARTIFACT_PATH = "models/gradient_boosting.joblib"
+ARTIFACT_PATH = Path("models/gradient_boosting.joblib")
+
+pytestmark = pytest.mark.skipif(
+    not ARTIFACT_PATH.exists(),
+    reason=f"Model artifact not found at {ARTIFACT_PATH}. Run training first.",
+)
 
 
 @pytest.fixture(scope="module")
