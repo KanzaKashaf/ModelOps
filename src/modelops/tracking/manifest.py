@@ -40,17 +40,24 @@ def get_registered_version(run_id: str, model_name: str) -> int:
 
 def build_manifest(
     model_name: str,
+    registered_model_name: str,
     run_id: str,
     registered_model_version: int,
     local_artifact_path: Path | str,
     train_data_hash: str,
     test_metrics: dict,
 ) -> dict:
-    """Build a complete model manifest dictionary."""
+    """Build a complete model manifest dictionary.
+
+    ``model_name`` is the local pipeline identifier (e.g. "gradient_boosting").
+    ``registered_model_name`` is the MLflow registry name
+    (e.g. "modelops-housing-regressor").
+    """
     artifact_hash = sha256_file(local_artifact_path)
     return {
-        "schema_version": "1.0.0",
+        "schema_version": "1.1.0",
         "model_name": model_name,
+        "registered_model_name": registered_model_name,
         "mlflow_run_id": run_id,
         "registered_model_version": registered_model_version,
         "artifact_path": str(local_artifact_path),

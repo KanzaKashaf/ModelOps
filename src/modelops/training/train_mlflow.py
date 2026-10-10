@@ -155,6 +155,7 @@ def main() -> None:
         local_artifact = ARTIFACT_DIR / f"{model_name}.joblib"
         manifest = build_manifest(
             model_name=model_name,
+            registered_model_name=REGISTERED_MODEL_NAME,
             run_id=result["run_id"],
             registered_model_version=version,
             local_artifact_path=local_artifact,
