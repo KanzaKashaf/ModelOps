@@ -19,3 +19,26 @@ See [docs/architecture.md](docs/architecture.md).
 - `main` — protected branch, always deployable.
 - Feature branches: `feature/<short-description>`
 - Pull requests require passing CI before merge.
+
+
+
+## Model Governance
+
+Model promotion is gated by deterministic quality criteria. See
+[docs/model-governance.md](docs/model-governance.md) for the policy,
+workflow, and rollback procedure.
+
+Quick start:
+
+```powershell
+# Start MLflow (separate terminal)
+.\scripts\start_mlflow.ps1
+
+# Train and register candidates
+python -m modelops.training.train_mlflow
+
+# Evaluate promotion (dry-run)
+python scripts/promote_model.py manifests/gradient_boosting-v9.json --dry-run
+
+# Promote if approved
+python scripts/promote_model.py manifests/gradient_boosting-v9.json

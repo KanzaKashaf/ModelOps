@@ -37,6 +37,11 @@ Thumbs.db
 *.pt
 *.onnx
 
+# MLflow
+/mlflow.db
+/mlflow.db-journal
+/manifests/
+
 # Logs
 *.log
 /logs/
