@@ -29,6 +29,7 @@ Thumbs.db
 # Data & Models
 data/
 models/
+reports/
 mlruns/
 *.joblib
 *.pkl
