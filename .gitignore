@@ -28,6 +28,8 @@ Thumbs.db
 
 # Data & Models
 data/
+!src/modelops/data/
+!src/modelops/data/*.py
 models/
 reports/
 mlruns/

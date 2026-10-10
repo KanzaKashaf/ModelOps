@@ -30,6 +30,7 @@
 """Tests for deterministic splitting."""
 
 import pandas as pd
+
 from modelops.data.loader import load_dataset
 from modelops.data.split import split_dataset
 

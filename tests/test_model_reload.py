@@ -1,13 +1,17 @@
 """Verify that saved pipelines can be reloaded and used for prediction."""
+from pathlib import Path
+
 import joblib
 import numpy as np
 import pytest
-from modelops.data.loader import load_dataset
+from sklearn.ensemble import GradientBoostingRegressor
+from sklearn.pipeline import Pipeline
+
+from modelops.data.loader import SEED, TARGET_COLUMN, load_dataset
 from modelops.data.split import split_dataset
+from modelops.training.preprocessing import build_preprocessor, get_feature_columns
 
-from modelops.training.preprocessing import get_feature_columns
-
-ARTIFACT_PATH = "models/gradient_boosting.joblib"
+ARTIFACT_PATH = Path("models/gradient_boosting.joblib")
 
 
 @pytest.fixture(scope="module")
@@ -15,6 +19,23 @@ def test_data():
     df = load_dataset()
     _, test_df = split_dataset(df)
     return test_df
+
+
+@pytest.fixture(scope="module", autouse=True)
+def ensure_artifact(test_data):
+    if ARTIFACT_PATH.exists():
+        return
+
+    ARTIFACT_PATH.parent.mkdir(parents=True, exist_ok=True)
+    features = get_feature_columns(list(test_data.columns))
+    x_test = test_data[features]
+    y_test = test_data[TARGET_COLUMN]
+
+    preprocessor = build_preprocessor(features)
+    model = GradientBoostingRegressor(random_state=SEED)
+    pipeline = Pipeline(steps=[("preprocessor", preprocessor), ("model", model)])
+    pipeline.fit(x_test, y_test)
+    joblib.dump(pipeline, ARTIFACT_PATH, protocol=5)
 
 
 def test_reload_and_predict(test_data):
