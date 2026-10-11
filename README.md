@@ -51,3 +51,27 @@ MLflow server):
 
 ```bash
 python -m modelops.serving
+
+
+```markdown
+# ModelOps Platform
+
+[![CI](https://github.com/KanzaKashaf/ModelOps/actions/workflows/ci.yml/badge.svg)](https://github.com/KanzaKashaf/ModelOps/actions/workflows/ci.yml)
+
+A production-style MLOps platform...
+
+
+## CI/CD
+
+Continuous integration runs on GitHub Actions. See
+[docs/ci-cd.md](docs/ci-cd.md) for the job inventory, path-based
+gating rules, security tooling, and the model-contract contract.
+
+The pipeline includes:
+- Ruff linting and pytest unit tests
+- Data validation, training smoke test, and model reload tests
+- MLflow tracking, promotion gate, and champion promotion
+- Serving API contract tests and OpenAPI schema validation
+- Model-contract tests (schema alignment between training and serving)
+- Security scanning: Bandit (SAST), pip-audit (SCA), Gitleaks (secrets)
+- Test report aggregation into the PR summary
