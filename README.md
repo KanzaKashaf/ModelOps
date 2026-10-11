@@ -42,3 +42,12 @@ python scripts/promote_model.py manifests/gradient_boosting-v9.json --dry-run
 
 # Promote if approved
 python scripts/promote_model.py manifests/gradient_boosting-v9.json
+
+
+## Serving API
+
+Start the API (requires the local champion artifact or a running
+MLflow server):
+
+```bash
+python -m modelops.serving
