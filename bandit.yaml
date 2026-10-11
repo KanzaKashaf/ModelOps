@@ -1,0 +1,16 @@
+# Bandit configuration for the ModelOps platform.
+# Run locally:  bandit -c bandit.yaml -r src/
+# Run in CI:    bandit -c bandit.yaml -r src/ -ll   (-ll = HIGH only)
+exclude_dirs:
+  - tests
+  - .venv
+  - build
+  - dist
+
+skips:
+  - B101  # assert_used: pytest uses assert for assertions
+
+# CI fails the job on HIGH severity findings only.
+# MEDIUM and LOW are still reported, but do not block the build.
+# Review MEDIUM findings periodically and raise the threshold once
+# the baseline is clean.
