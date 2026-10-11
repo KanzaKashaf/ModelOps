@@ -1,0 +1,28 @@
+# Gitleaks configuration for the ModelOps platform.
+# Docs: https://github.com/gitleaks/gitleaks#configuration
+title = "ModelOps"
+
+[extend]
+# Use the default rule set (AWS, GitHub, Stripe, private keys, etc.)
+# and add project-specific allowlists below.
+useDefault = true
+
+[allowlist]
+description = "Global allowlist"
+
+# Paths that cannot contain secrets but frequently trigger false
+# positives from the default rules.
+paths = [
+    # MLflow-generated artifacts. These are gitignored, but this
+    # protects against accidental commits if `.gitignore` is edited.
+    '''mlruns/.*''',
+    '''mlflow\.db''',
+    # Documentation examples that contain placeholder values.
+    # Real secrets must never be placed in docs; this allowlist is
+    # only for illustrative strings like "sk-test-not-a-real-key".
+    '''docs/.*\.md''',
+]
+
+# Note: do NOT allowlist tests/. If a test fixture contains a string
+# that looks like a secret, make it obviously fake
+# (e.g., "not-a-real-key") rather than hiding the whole directory.
