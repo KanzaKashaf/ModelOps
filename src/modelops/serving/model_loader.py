@@ -63,44 +63,50 @@ def load_model(
 ) -> LoadedModel:
     """Load the model, preferring the MLflow registry.
 
+    Saves and restores the process-wide MLflow tracking URI so this
+    function never leaves global state modified for its callers.
+
     Raises ``RuntimeError`` if both the registry and the fallback fail.
     """
+    original_uri = mlflow.get_tracking_uri()
     mlflow.set_tracking_uri(tracking_uri)
-
-    # --- Attempt MLflow registry load first -------------------------------
     try:
-        model = mlflow.sklearn.load_model(model_uri)
-        version = resolve_model_version(model_uri, model_name)
-        logger.info("Loaded model from MLflow registry: %s", model_uri)
-        return LoadedModel(
-            model=model,
-            model_name=model_name,
-            model_version=version,
-            model_uri=model_uri,
-            source="mlflow_registry",
-        )
-    except Exception as exc:  # noqa: BLE001 - we want to try the fallback
-        logger.warning(
-            "MLflow registry load failed for %s: %s. Trying local fallback.",
-            model_uri,
-            exc,
-        )
-
-    # --- Fallback to local joblib artifact --------------------------------
-    if local_fallback and Path(local_fallback).exists():
+        # --- Attempt MLflow registry load first ---------------------------
         try:
-            model = joblib.load(local_fallback)
-            logger.info("Loaded model from local fallback: %s", local_fallback)
+            model = mlflow.sklearn.load_model(model_uri)
+            version = resolve_model_version(model_uri, model_name)
+            logger.info("Loaded model from MLflow registry: %s", model_uri)
             return LoadedModel(
                 model=model,
                 model_name=model_name,
-                model_version="local-fallback",
-                model_uri=str(local_fallback),
-                source="local_fallback",
+                model_version=version,
+                model_uri=model_uri,
+                source="mlflow_registry",
             )
-        except Exception as exc:  # noqa: BLE001
-            logger.error("Local fallback load failed: %s", exc)
+        except Exception as exc:  # noqa: BLE001 - want to try fallback
+            logger.warning(
+                "MLflow registry load failed for %s: %s. Trying local fallback.",
+                model_uri,
+                exc,
+            )
 
-    raise RuntimeError(
-        f"Could not load model from {model_uri} or fallback {local_fallback}"
-    )
+        # --- Fallback to local joblib artifact ----------------------------
+        if local_fallback and Path(local_fallback).exists():
+            try:
+                model = joblib.load(local_fallback)
+                logger.info("Loaded model from local fallback: %s", local_fallback)
+                return LoadedModel(
+                    model=model,
+                    model_name=model_name,
+                    model_version="local-fallback",
+                    model_uri=str(local_fallback),
+                    source="local_fallback",
+                )
+            except Exception as exc:  # noqa: BLE001
+                logger.error("Local fallback load failed: %s", exc)
+
+        raise RuntimeError(
+            f"Could not load model from {model_uri} or fallback {local_fallback}"
+        )
+    finally:
+        mlflow.set_tracking_uri(original_uri)
