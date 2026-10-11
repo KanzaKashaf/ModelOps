@@ -31,6 +31,7 @@ reports/
 # ── Documentation and local config ───────────────────────────────
 docs/
 *.md
+!README.md
 .env
 .env.*
 !.env.example
