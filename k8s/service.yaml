@@ -1,0 +1,16 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: modelops-serving
+  namespace: modelops
+  labels:
+    app: modelops-serving
+spec:
+  type: ClusterIP
+  selector:
+    app: modelops-serving
+  ports:
+    - name: http
+      port: 80
+      targetPort: http
+      protocol: TCP
