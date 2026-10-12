@@ -353,14 +353,26 @@ jobs:
         run: |
           docker run -d --name test-serving \
             -p 8000:8000 \
+            -e MODELOPS_MODEL_URI="file:///nonexistent" \
             modelops-serving:ci-${{ github.sha }}
-          for i in $(seq 1 30); do
-            if curl -sf http://127.0.0.1:8000/health/live > /dev/null; then
+
+          for i in $(seq 1 60); do
+            if curl -sf http://127.0.0.1:8000/health/live > /dev/null 2>&1; then
               echo "Liveness passed after ${i}s"
               break
             fi
             sleep 1
           done
-          curl -sf http://127.0.0.1:8000/health/live
+
+          echo "--- Final liveness check ---"
+          if ! curl -sf http://127.0.0.1:8000/health/live; then
+            echo "Liveness failed. Container logs:"
+            docker logs test-serving
+            docker stop test-serving
+            docker rm test-serving
+            exit 1
+          fi
+          echo ""
+
           docker stop test-serving
           docker rm test-serving

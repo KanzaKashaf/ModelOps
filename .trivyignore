@@ -18,6 +18,13 @@
 #   When Debian publishes patches, a base-image digest update will pick them
 #   up and this list must shrink.
 
+# POLICY (updated 2026-10-12): the scan runs with --ignore-unfixed.
+# CVEs without a published fix are allowed automatically. This file
+# additionally suppresses specific CVEs that DO have fixes but have
+# been triaged as not exploitable in our runtime. If Debian publishes
+# a fix, the corresponding entry must be removed from this file so the
+# gate can validate the upgrade.
+
 # ── util-linux family (mount, bsdutils, login, libblkid1, libmount1, etc.) ──
 # The app never invokes any util-linux binary. The CVE affects external
 # mount helpers and nsenter cgroup migration; neither is reachable at runtime.
