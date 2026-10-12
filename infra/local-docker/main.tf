@@ -60,8 +60,8 @@ resource "docker_container" "serving" {
 
   # Resource limits matching the Kubernetes requests/limits that
   # Phase 7 will define, for consistency between environments.
-  memory = var.memory_mb
-  cpu    = var.cpu_shares
+  memory     = var.memory_mb
+  cpu_shares = var.cpu_shares
 
   restart = "unless-stopped"
 
