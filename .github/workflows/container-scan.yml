@@ -66,8 +66,7 @@ jobs:
           output: 'trivy-results.sarif'
           severity: 'CRITICAL,HIGH'
           exit-code: '1'
-          ignore-unfixed: true
-          trivyignores: '.trivyignore'
+          ignore-unfixed: 'true'
 
       - name: Upload Trivy SARIF to GitHub Security
         if: always()

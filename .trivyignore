@@ -1,74 +1,62 @@
-# Trivy suppression file for the ModelOps serving image.
+# Documented, triaged CVEs in the ModelOps serving image.
 #
-# Format: one CVE ID per line. `#` starts a comment.
-# Trivy will not fail the build on CVEs listed here.
+# NOTE: as of 2026-10-12, the CI Trivy scan runs with
+# `ignore-unfixed: 'true'`, so CVEs without a published fix are
+# automatically allowed. This file is a *documentation* artifact:
+# it explains the reasoning for the specific CVEs we observed and
+# would otherwise fail the scan.
 #
-# EVERY entry below must be re-evaluated when the base image is updated.
-# The workflow pins the base digest, so a new digest is a deliberate action
-# that should be accompanied by a fresh triage of this file.
+# MAINTENANCE: when Debian publishes a fix for one of the CVEs
+# below, the entry must be removed from this file AND the base
+# image digest must be updated in the Dockerfile. The scan will
+# then fail if the fix is not applied — that is the intended
+# behaviour.
 #
 # Context:
-# - The base is python:3.12-slim (Debian 13.7 "trixie").
-# - The application runs as a non-root user (UID 1001) with no shell and no
-#   login privileges. Container escape via these CVEs would need to first
-#   defeat that, and then exploit an OS package the app never invokes.
-# - 0 CVEs were found in any Python package, including scikit-learn, numpy,
-#   pandas, mlflow, fastapi, pydantic, and their transitive dependencies.
-# - All findings are in Debian 13 OS packages with no fix currently published.
-#   When Debian publishes patches, a base-image digest update will pick them
-#   up and this list must shrink.
+# - Base: python:3.12-slim (Debian 13.7 "trixie").
+# - Runtime user: UID 1001, no home directory, nologin shell.
+# - Python packages: 0 CVEs across all 130 wheels (scikit-learn,
+#   numpy, pandas, scipy, mlflow, fastapi, pydantic, pandera, etc.).
 
-# POLICY (updated 2026-10-12): the scan runs with --ignore-unfixed.
-# CVEs without a published fix are allowed automatically. This file
-# additionally suppresses specific CVEs that DO have fixes but have
-# been triaged as not exploitable in our runtime. If Debian publishes
-# a fix, the corresponding entry must be removed from this file so the
-# gate can validate the upgrade.
-
-# ── util-linux family (mount, bsdutils, login, libblkid1, libmount1, etc.) ──
-# The app never invokes any util-linux binary. The CVE affects external
-# mount helpers and nsenter cgroup migration; neither is reachable at runtime.
+# ── util-linux family ───────────────────────────────────────────────
+# The app never invokes any util-linux binary. Affected code path:
+# external mount helpers and nsenter cgroup migration. Unreachable.
 CVE-2026-76642
 CVE-2026-78408
 CVE-2026-78409
 CVE-2026-78410
 
-# ── curl / libcurl4t64 ──
-# curl is installed solely to satisfy the container HEALTHCHECK and entrypoint
-# readiness loop against a trusted local MLflow server. The HTTP requests our
-# code issues never use SSH, SFTP, SCP, or proxy authentication (the affected
-# code paths), so these CVEs are unreachable.
+# ── curl / libcurl4t64 ──────────────────────────────────────────────
+# curl is installed solely for the container HEALTHCHECK and the
+# entrypoint readiness loop against a trusted local MLflow server.
+# The affected code paths (SSH/SFTP/SCP, proxy auth) are never used.
 CVE-2026-12064
 CVE-2026-8286
 CVE-2026-8458
 CVE-2026-8927
 
-# ── libgnutls30t64 ──
-# gnutls is a transitive dependency of curl. Our HTTPS traffic is either to
-# PyPI during image build (from inside the builder stage, not the runtime
-# image) or to our own MLflow server over plain HTTP. No external TLS
-# handshakes happen at runtime.
+# ── libgnutls30t64 ──────────────────────────────────────────────────
+# Transitive dependency of curl. Our runtime HTTPS traffic is either
+# PyPI during build (builder stage) or our own MLflow over plain HTTP.
 CVE-2026-88647
 CVE-2026-88648
 
-# ── libacl1 ──
-# The CVE requires the app to call libacl symlink-handling APIs. The app does
-# not link against libacl directly and does not manipulate ACLs.
+# ── libacl1 ─────────────────────────────────────────────────────────
+# The CVE requires libacl symlink-handling APIs. We don't link
+# against libacl directly and don't manipulate ACLs.
 CVE-2026-54369
 
-# ── ncurses ──
-# ncurses is present for Debian base tooling (e.g., dpkg). The runtime image
-# does not open a TTY, does not run interactive programs, and does not
-# process untrusted terminal escape sequences.
+# ── ncurses ─────────────────────────────────────────────────────────
+# Present for Debian base tooling (e.g. dpkg). No TTY in the runtime
+# image; no interactive programs; no untrusted terminal sequences.
 CVE-2025-69720
 
-# ── systemd / libsystemd0 / libudev1 ──
-# systemd-homed is not installed. The library is present because Debian base
-# tooling links against it, but the vulnerable code path is unreachable.
+# ── systemd / libsystemd0 / libudev1 ────────────────────────────────
+# systemd-homed is not installed. Library is present because Debian
+# base tooling links against it; vulnerable path is unreachable.
 CVE-2026-16742
 
-# ── perl-base ──
-# Debian 13 has marked this as fix_deferred. perl-base is a base-image
-# dependency (used by dpkg). The app does not invoke Perl or process untrusted
-# tar archives.
+# ── perl-base ───────────────────────────────────────────────────────
+# Debian 13 marks this as fix_deferred. Base-image dependency (dpkg).
+# The app does not invoke Perl or process untrusted tar archives.
 CVE-2026-9538
