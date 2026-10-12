@@ -1,0 +1,81 @@
+name: Container Scan
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'Dockerfile'
+      - 'docker/**'
+      - 'docker-compose.yml'
+      - 'src/**'
+      - 'pyproject.toml'
+      - 'uv.lock'
+      - '.github/workflows/container-scan.yml'
+  pull_request:
+    branches: [main]
+    paths:
+      - 'Dockerfile'
+      - 'docker/**'
+      - 'docker-compose.yml'
+      - 'src/**'
+      - 'pyproject.toml'
+      - 'uv.lock'
+      - '.github/workflows/container-scan.yml'
+
+permissions:
+  contents: read
+  security-events: write
+
+jobs:
+  build-and-scan:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build image
+        run: |
+          docker build -t modelops-serving:ci-${{ github.sha }} .
+
+      - name: Verify non-root user
+        run: |
+          USER=$(docker run --rm --entrypoint whoami modelops-serving:ci-${{ github.sha }})
+          echo "Container runs as: $USER"
+          if [ "$USER" != "appuser" ]; then
+            echo "ERROR: Container is not running as appuser"
+            exit 1
+          fi
+
+      - name: Verify no build tools in runtime image
+        run: |
+          if docker run --rm --entrypoint sh modelops-serving:ci-${{ github.sha }} \
+               -c "which gcc" 2>/dev/null; then
+            echo "ERROR: gcc found in runtime image"
+            exit 1
+          fi
+          echo "No build tools found in runtime image: OK"
+
+      - name: Run Trivy vulnerability scanner
+        uses: aquasecurity/trivy-action@57a97c7e7821a5776cebc9bb87c984fa69cba8f1
+        with:
+          image-ref: 'modelops-serving:ci-${{ github.sha }}'
+          format: 'sarif'
+          output: 'trivy-results.sarif'
+          severity: 'CRITICAL,HIGH'
+          exit-code: '1'
+
+      - name: Upload Trivy SARIF to GitHub Security
+        if: always()
+        uses: github/codeql-action/upload-sarif@v3
+        with:
+          sarif_file: 'trivy-results.sarif'
+
+      - name: Upload Trivy report as artifact
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: trivy-report
+          path: trivy-results.sarif
+          if-no-files-found: ignore
