@@ -75,3 +75,17 @@ The pipeline includes:
 - Model-contract tests (schema alignment between training and serving)
 - Security scanning: Bandit (SAST), pip-audit (SCA), Gitleaks (secrets)
 - Test report aggregation into the PR summary
+
+
+```markdown
+## Infrastructure as Code
+
+The local Docker resources are also declarative via Terraform in
+`infra/local-docker/`. This is a learning exercise that demonstrates
+providers, resources, variables, outputs, state, and dependency
+graphs — on a zero-cost, local target.
+
+```bash
+cd infra/local-docker
+terraform init
+terraform plan -var="image_tag=$(git rev-parse --short HEAD)" -var="model_path=$(pwd)/../../models"
