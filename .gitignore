@@ -46,11 +46,26 @@ Thumbs.db
 *.log
 /logs/
 
-# Terraform
+
+# ── Terraform ────────────────────────────────────────────────────
+# State files contain resource attributes and may contain sensitive
+# values in cloud configurations. Never commit them.
 *.tfstate
 *.tfstate.*
+*.tfplan
 .terraform/
-.terraform.lock.hcl
+terraform.tfvars
+*.auto.tfvars
+
+# Crash logs
+crash.log
+crash.*.log
+
+# Override files
+override.tf
+override.tf.json
+*_override.tf
+*_override.tf.json
 
 # Kubernetes
 *.kubeconfig

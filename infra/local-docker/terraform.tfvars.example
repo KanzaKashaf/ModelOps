@@ -1,0 +1,12 @@
+# Copy to terraform.tfvars and adjust. terraform.tfvars is git-ignored.
+# All variables have sensible defaults, so this file is optional.
+
+image_tag           = "latest"
+container_name      = "modelops-serving-tf"
+host_port           = 8000
+container_port      = 8000
+model_path          = "/home/<user>/ModelOps/models"
+mlflow_tracking_uri = ""  # Empty means use the local fallback
+network_name        = "modelops-tf-network"
+memory_mb           = 512
+cpu_shares          = 512
