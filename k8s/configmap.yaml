@@ -6,11 +6,13 @@ metadata:
   labels:
     app: modelops-serving
 data:
-  MODELOPS_MODEL_URI: "models:/modelops-housing-regressor@champion"
+  # Phase 7: MLflow is not deployed in-cluster. Both the registry
+  # URI and the tracking URI are empty, forcing the serving app to
+  # skip the registry entirely and load from the local fallback at
+  # MODELOPS_LOCAL_ARTIFACT_FALLBACK. Phase 8 will deploy MLflow
+  # in-cluster and set MODELOPS_MODEL_URI to the champion alias.
+  MODELOPS_MODEL_URI: ""
   MODELOPS_MODEL_NAME: "modelops-housing-regressor"
   MODELOPS_LOCAL_ARTIFACT_FALLBACK: "/app/models/gradient_boosting.joblib"
-  # MLflow is not deployed in-cluster in Phase 7. Point to a
-  # nonexistent hostname so the loader fails fast and falls through
-  # to the local fallback. Phase 8/9 will deploy MLflow in-cluster.
-  MODELOPS_MLFLOW_TRACKING_URI: "http://mlflow.modelops.svc.cluster.local:5000"
+  MODELOPS_MLFLOW_TRACKING_URI: ""
   LOG_LEVEL: "INFO"
