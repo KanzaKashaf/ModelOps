@@ -267,9 +267,9 @@ jobs:
 
       # ── SAST: Bandit ───────────────────────────────────────────────
       - name: Bandit (SAST) — generate report
-        run: bandit -c bandit.yaml -r src/ -ll -f json -o reports/bandit.json
+        run: bandit -c bandit.yaml -r src/ -lll -f json -o reports/bandit.json
       - name: Bandit (SAST) — fail on HIGH severity
-        run: bandit -c bandit.yaml -r src/ -ll
+        run: bandit -c bandit.yaml -r src/ -lll
       - name: Upload Bandit report
         if: always()
         uses: actions/upload-artifact@v4
