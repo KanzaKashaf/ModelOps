@@ -1,0 +1,49 @@
+# ── Version control ──────────────────────────────────────────────
+.git
+.gitignore
+.gitattributes
+
+# ── Python environments and caches ───────────────────────────────
+.venv/
+venv/
+__pycache__/
+*.py[cod]
+*.egg-info/
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+
+# ── Development tooling ──────────────────────────────────────────
+.github/
+.vscode/
+.idea/
+*.swp
+
+# ── Data and model artifacts (mounted at runtime, not baked in) ──
+data/
+models/
+mlruns/
+mlflow.db
+mlflow.db-journal
+manifests/
+reports/
+
+# ── Documentation and local config ───────────────────────────────
+docs/
+*.md
+!README.md
+.env
+.env.*
+!.env.example
+
+# ── Docker and compose ───────────────────────────────────────────
+Dockerfile
+docker-compose*.yml
+.dockerignore
+
+# ── Tests (not needed in production image) ───────────────────────
+tests/
+conftest.py
+
+# ── Test / dev lockfiles (only uv.lock is used inside the image) ─
+requirements-dev.lock
