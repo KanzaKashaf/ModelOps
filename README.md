@@ -89,3 +89,25 @@ graphs — on a zero-cost, local target.
 cd infra/local-docker
 terraform init
 terraform plan -var="image_tag=$(git rev-parse --short HEAD)" -var="model_path=$(pwd)/../../models"
+
+
+```markdown
+## Kubernetes
+
+The serving API is deployed to a local kind cluster with a Deployment, ClusterIP Service, ConfigMap, Secret, and PersistentVolumeClaim.
+
+```bash
+# Create the cluster
+kind create cluster --config k8s/kind-config.yaml
+
+# Apply the manifests
+kubectl apply -f k8s/namespace.yaml
+kubectl apply -f k8s/configmap.yaml
+kubectl apply -f k8s/pv-model.yaml
+kubectl apply -f k8s/pvc-model.yaml
+kubectl apply -f k8s/deployment.yaml
+kubectl apply -f k8s/service.yaml
+
+# Port-forward and test
+kubectl port-forward -n modelops svc/modelops-serving 8081:80
+curl http://127.0.0.1:8081/health/ready
