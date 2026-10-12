@@ -69,3 +69,7 @@ override.tf.json
 
 # Kubernetes
 *.kubeconfig
+
+# ── Kubernetes secrets ───────────────────────────────────────────
+k8s/secret.env
+k8s/*.secret.yaml
