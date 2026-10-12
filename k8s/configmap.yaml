@@ -1,0 +1,16 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: modelops-config
+  namespace: modelops
+  labels:
+    app: modelops-serving
+data:
+  MODELOPS_MODEL_URI: "models:/modelops-housing-regressor@champion"
+  MODELOPS_MODEL_NAME: "modelops-housing-regressor"
+  MODELOPS_LOCAL_ARTIFACT_FALLBACK: "/app/models/gradient_boosting.joblib"
+  # MLflow is not deployed in-cluster in Phase 7. Point to a
+  # nonexistent hostname so the loader fails fast and falls through
+  # to the local fallback. Phase 8/9 will deploy MLflow in-cluster.
+  MODELOPS_MLFLOW_TRACKING_URI: "http://mlflow.modelops.svc.cluster.local:5000"
+  LOG_LEVEL: "INFO"
