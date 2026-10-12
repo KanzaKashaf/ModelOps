@@ -24,6 +24,7 @@ jobs:
       ml: ${{ steps.filter.outputs.ml }}
       security: ${{ steps.filter.outputs.security }}
       docs: ${{ steps.filter.outputs.docs }}
+      infra: ${{ steps.filter.outputs.infra }}
     steps:
       - uses: actions/checkout@v4
         with:
@@ -57,6 +58,11 @@ jobs:
             docs:
               - '**.md'
               - 'docs/**'
+            infra:
+              - 'infra/**'
+              - '*.tf'
+              - '*.tfvars'
+              - '.github/workflows/ci.yml'
 
   # ── 1. Quality: lint + fast unit tests ─────────────────────────────
   quality:
@@ -376,3 +382,36 @@ jobs:
 
           docker stop test-serving
           docker rm test-serving
+
+  terraform-validate:
+    runs-on: ubuntu-latest
+    needs: changes
+    if: needs.changes.outputs.infra == 'true'
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: "1.16.5"
+          terraform_wrapper: false
+
+      - name: Terraform Format Check
+        working-directory: infra/local-docker
+        run: terraform fmt -check -recursive
+
+      - name: Terraform Init
+        working-directory: infra/local-docker
+        run: terraform init -backend=false
+
+      - name: Terraform Validate
+        working-directory: infra/local-docker
+        run: terraform validate
+
+      - name: Terraform Plan (dry-run, no apply)
+        working-directory: infra/local-docker
+        run: |
+          terraform plan \
+            -var="image_tag=ci" \
+            -var="model_path=" \
+            -no-color
