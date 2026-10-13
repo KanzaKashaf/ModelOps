@@ -1,0 +1,17 @@
+Thank you for installing {{ .Chart.Name }}.
+
+Your release is named {{ .Release.Name }} in namespace {{ .Values.namespace.name }}.
+
+To access the serving API:
+
+  kubectl port-forward -n {{ .Values.namespace.name }} svc/{{ include "modelops-serving.fullname" . }} 8081:{{ .Values.service.port }}
+
+Then:
+
+  curl http://127.0.0.1:8081/health/live
+  curl http://127.0.0.1:8081/health/ready
+  curl http://127.0.0.1:8081/v1/model/info
+
+Image:    {{ .Values.image.repository }}:{{ .Values.image.tag }}
+Replicas: {{ .Values.replicaCount }}
+Chart:    {{ .Chart.Name }}-{{ .Chart.Version }}
