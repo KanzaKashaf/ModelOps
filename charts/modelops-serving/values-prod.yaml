@@ -2,7 +2,7 @@
 # 3 replicas, INFO logging, secret enabled, Prometheus annotations.
 # Uses the MLflow registry with the local fallback as a safety net.
 
-replicaCount: 3
+replicaCount: 1
 
 image:
   repository: modelops-serving
