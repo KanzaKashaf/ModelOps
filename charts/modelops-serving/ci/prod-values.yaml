@@ -1,0 +1,16 @@
+# CI-only: validation of the prod configuration.
+replicaCount: 3
+image:
+  repository: modelops-serving
+  tag: "ci"
+  pullPolicy: IfNotPresent
+config:
+  modelUri: ""
+  mlflowTrackingUri: ""
+  logLevel: "INFO"
+secret:
+  enabled: true
+  name: "modelops-secrets"
+persistence:
+  enabled: true
+  hostPath: "/models"
