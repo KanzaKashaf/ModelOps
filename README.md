@@ -21,7 +21,6 @@ See [docs/architecture.md](docs/architecture.md).
 - Pull requests require passing CI before merge.
 
 
-
 ## Model Governance
 
 Model promotion is gated by deterministic quality criteria. See
@@ -111,3 +110,19 @@ kubectl apply -f k8s/service.yaml
 # Port-forward and test
 kubectl port-forward -n modelops svc/modelops-serving 8081:80
 curl http://127.0.0.1:8081/health/ready
+
+
+
+```markdown
+## GitOps
+
+The serving chart is reconciled by Argo CD from
+`gitops/argocd-app.yaml`. See [docs/gitops.md](docs/gitops.md)
+for sync policy, drift correction, and rollback procedures.
+
+```bash
+# Port-forward Argo CD UI
+kubectl port-forward svc/argocd-server -n argocd 8090:443
+
+# Port-forward serving API
+kubectl port-forward -n modelops svc/modelops-serving 8081:80

@@ -26,6 +26,7 @@ jobs:
       docs: ${{ steps.filter.outputs.docs }}
       infra: ${{ steps.filter.outputs.infra }}
       k8s: ${{ steps.filter.outputs.k8s }}
+      helm: ${{ steps.filter.outputs.helm }}
     steps:
       - uses: actions/checkout@v4
         with:
@@ -66,6 +67,9 @@ jobs:
               - '.github/workflows/ci.yml'
             k8s:
               - 'k8s/**'
+            helm:
+              - 'charts/**'
+              - 'gitops/**'
 
   # ── 1. Quality: lint + fast unit tests ─────────────────────────────
   quality:
@@ -445,3 +449,51 @@ jobs:
             k8s/pvc-model.yaml \
             k8s/deployment.yaml \
             k8s/service.yaml
+
+  helm-validate:
+    runs-on: ubuntu-latest
+    needs: changes
+    if: needs.changes.outputs.helm == 'true' || needs.changes.outputs.k8s == 'true'
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Helm
+        uses: azure/setup-helm@v4
+        with:
+          version: "v3.22.0"
+
+      - name: Install kubeconform
+        run: |
+          KUBECONFORM_VERSION=v0.6.7
+          curl -sSL "https://github.com/yannh/kubeconform/releases/download/${KUBECONFORM_VERSION}/kubeconform-linux-amd64.tar.gz" \
+            | tar xz -C /tmp kubeconform
+          sudo mv /tmp/kubeconform /usr/local/bin/
+          kubeconform -v
+
+      - name: Helm lint (default values)
+        run: helm lint charts/modelops-serving
+
+      - name: Helm lint (dev values)
+        run: helm lint charts/modelops-serving -f charts/modelops-serving/values-dev.yaml
+
+      - name: Helm lint (prod values)
+        run: helm lint charts/modelops-serving -f charts/modelops-serving/values-prod.yaml
+
+      - name: Helm template (dev)
+        run: |
+          helm template modelops-serving charts/modelops-serving \
+            -f charts/modelops-serving/values-dev.yaml \
+            --namespace modelops > /tmp/rendered-dev.yaml
+          echo "Rendered $(grep -c '^kind:' /tmp/rendered-dev.yaml) resources (dev)"
+
+      - name: Helm template (prod)
+        run: |
+          helm template modelops-serving charts/modelops-serving \
+            -f charts/modelops-serving/values-prod.yaml \
+            --namespace modelops > /tmp/rendered-prod.yaml
+          echo "Rendered $(grep -c '^kind:' /tmp/rendered-prod.yaml) resources (prod)"
+
+      - name: Validate rendered manifests with kubeconform
+        run: |
+          kubeconform -strict -summary -ignore-missing-schemas /tmp/rendered-dev.yaml
+          kubeconform -strict -summary -ignore-missing-schemas /tmp/rendered-prod.yaml
