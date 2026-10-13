@@ -1,0 +1,40 @@
+# Development environment values.
+# Optimised for fast iteration: 1 replica, debug logging, no secret.
+# Uses the local fallback model because MLflow is not deployed in-cluster.
+
+replicaCount: 1
+
+image:
+  repository: modelops-serving
+  tag: "fe393a6"
+  pullPolicy: IfNotPresent
+
+namespace:
+  create: false
+  name: modelops
+
+config:
+  modelUri: ""
+  modelName: "modelops-housing-regressor"
+  localArtifactFallback: "/app/models/gradient_boosting.joblib"
+  mlflowTrackingUri: ""
+  logLevel: "DEBUG"
+
+resources:
+  requests:
+    cpu: 100m
+    memory: 128Mi
+  limits:
+    cpu: 250m
+    memory: 256Mi
+
+secret:
+  enabled: false
+
+persistence:
+  enabled: true
+  storageClassName: manual
+  accessMode: ReadOnlyMany
+  size: 1Gi
+  hostPath: "/models"
+  existingClaim: ""

@@ -1,0 +1,15 @@
+apiVersion: v2
+name: modelops-serving
+description: Helm chart for the ModelOps serving API
+type: application
+version: 0.1.0
+appVersion: "1.0.0"
+keywords:
+  - mlops
+  - serving
+  - fastapi
+maintainers:
+  - name: KanzaKashaf
+    url: https://github.com/KanzaKashaf/ModelOps
+annotations:
+  category: MachineLearning

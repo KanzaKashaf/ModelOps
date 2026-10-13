@@ -1,0 +1,16 @@
+# CI-only: validation of the dev configuration.
+# Lives in ci/ so it is not packaged into the chart tarball.
+replicaCount: 1
+image:
+  repository: modelops-serving
+  tag: "ci"
+  pullPolicy: IfNotPresent
+config:
+  modelUri: ""
+  mlflowTrackingUri: ""
+  logLevel: "DEBUG"
+secret:
+  enabled: false
+persistence:
+  enabled: true
+  hostPath: "/models"

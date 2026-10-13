@@ -1,0 +1,49 @@
+# Production-like environment values.
+# 3 replicas, INFO logging, secret enabled, Prometheus annotations.
+# Uses the MLflow registry with the local fallback as a safety net.
+
+replicaCount: 1
+
+image:
+  repository: modelops-serving
+  tag: "fe393a6"
+  pullPolicy: IfNotPresent
+
+namespace:
+  create: false
+  name: modelops
+
+config:
+  # Phase 7 does not deploy MLflow in-cluster. The registry URI is
+  # left empty and the local fallback is used. Phase 9 will populate
+  # this with the in-cluster MLflow Service URL.
+  modelUri: ""
+  modelName: "modelops-housing-regressor"
+  localArtifactFallback: "/app/models/gradient_boosting.joblib"
+  mlflowTrackingUri: ""
+  logLevel: "INFO"
+
+resources:
+  requests:
+    cpu: 250m
+    memory: 256Mi
+  limits:
+    cpu: 500m
+    memory: 512Mi
+
+secret:
+  enabled: true
+  name: "modelops-secrets"
+
+podAnnotations:
+  prometheus.io/scrape: "true"
+  prometheus.io/port: "8000"
+  prometheus.io/path: "/metrics"
+
+persistence:
+  enabled: true
+  storageClassName: manual
+  accessMode: ReadOnlyMany
+  size: 1Gi
+  hostPath: "/models"
+  existingClaim: ""
