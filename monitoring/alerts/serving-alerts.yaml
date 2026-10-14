@@ -1,0 +1,80 @@
+groups:
+  - name: modelops.serving.slo
+    interval: 30s
+    rules:
+      # ── SLO: Availability (99% over 30 days) ──────────────────────
+      # Fast burn: 14.4x burn rate over 5m / 1h
+      - alert: ServingHighErrorRateFastBurn
+        expr: |
+          (
+            sum(rate(http_requests_total{status=~"5.."}[5m]))
+            /
+            sum(rate(http_requests_total[5m]))
+          ) > (14.4 * 0.01)
+        for: 2m
+        labels:
+          severity: critical
+          slo: availability
+        annotations:
+          summary: "High error rate (fast burn) on serving API"
+          description: "Error rate is {{ $value | humanizePercentage }}. Runbook: docs/runbooks/serving-high-error-rate.md"
+
+      - alert: ServingHighErrorRateSlowBurn
+        expr: |
+          (
+            sum(rate(http_requests_total{status=~"5.."}[30m]))
+            /
+            sum(rate(http_requests_total[30m]))
+          ) > (6 * 0.01)
+        for: 15m
+        labels:
+          severity: warning
+          slo: availability
+        annotations:
+          summary: "Elevated error rate (slow burn) on serving API"
+          description: "Error rate is {{ $value | humanizePercentage }} over 30m. Runbook: docs/runbooks/serving-high-error-rate.md"
+
+      # ── SLO: Latency (P95 < 500ms) ────────────────────────────────
+      - alert: ServingHighLatencyP95
+        expr: |
+          histogram_quantile(
+            0.95,
+            sum(rate(modelops_inference_duration_seconds_bucket[5m])) by (le)
+          ) > 0.5
+        for: 5m
+        labels:
+          severity: warning
+          slo: latency
+        annotations:
+          summary: "P95 inference latency exceeds 500ms"
+          description: "P95 latency is {{ $value }}s. Runbook: docs/runbooks/serving-high-latency.md"
+
+      # ── Operational ───────────────────────────────────────────────
+      - alert: ServingModelLoadFailures
+        expr: increase(modelops_model_load_failures_total[5m]) > 0
+        for: 1m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Model loading failures detected"
+          description: "{{ $value }} load failures in the last 5m. Runbook: docs/runbooks/serving-model-not-loaded.md"
+
+      - alert: ServingNoPredictionTraffic
+        expr: sum(rate(modelops_predictions_total[10m])) == 0
+        for: 10m
+        labels:
+          severity: warning
+        annotations:
+          summary: "No prediction traffic in the last 10 minutes"
+          description: "The serving API has received no requests. Runbook: docs/runbooks/serving-no-traffic.md"
+
+      # ── Drift (informational; NOT an SLO) ─────────────────────────
+      - alert: ServingHighDataDrift
+        expr: modelops_drift_share > 0.3
+        for: 5m
+        labels:
+          severity: warning
+          slo: model-quality
+        annotations:
+          summary: "High data drift detected on serving inputs"
+          description: "{{ $value | humanizePercentage }} of features have drifted. This does NOT prove accuracy decline. Runbook: docs/runbooks/serving-data-drift.md"
