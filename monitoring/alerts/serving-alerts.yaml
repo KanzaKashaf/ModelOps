@@ -60,13 +60,20 @@ groups:
           description: "{{ $value }} load failures in the last 5m. Runbook: docs/runbooks/serving-model-not-loaded.md"
 
       - alert: ServingNoPredictionTraffic
-        expr: sum(rate(modelops_predictions_total[10m])) == 0
+        expr: |
+          (up{job="modelops-serving"} == 0)
+          or
+          (
+            (up{job="modelops-serving"} == 1)
+            and
+            (increase(modelops_predictions_total[10m]) == 0)
+          )
         for: 10m
         labels:
           severity: warning
         annotations:
-          summary: "No prediction traffic in the last 10 minutes"
-          description: "The serving API has received no requests. Runbook: docs/runbooks/serving-no-traffic.md"
+          summary: "No prediction traffic or scrape target down"
+          description: "The serving API has received no requests, or the Prometheus scrape target is down. Runbook: docs/runbooks/serving-no-traffic.md"
 
       # ── Drift (informational; NOT an SLO) ─────────────────────────
       - alert: ServingHighDataDrift
