@@ -126,3 +126,18 @@ kubectl port-forward svc/argocd-server -n argocd 8090:443
 
 # Port-forward serving API
 kubectl port-forward -n modelops svc/modelops-serving 8081:80
+
+
+
+```markdown
+## Monitoring
+
+The platform ships with Prometheus, Grafana, and a Pushgateway in the
+Compose stack. Application metrics come from the serving API; drift
+metrics come from the Evidently job.
+
+```bash
+docker compose up -d
+
+# Prometheus: http://localhost:9090
+# Grafana:    http://localhost:3000 (admin / $GRAFANA_ADMIN_PASSWORD)
