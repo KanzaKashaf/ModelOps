@@ -66,6 +66,13 @@ services:
         condition: service_healthy
     restart: unless-stopped
 
+  pushgateway:
+    image: prom/pushgateway:v1.9.0
+    container_name: modelops-pushgateway
+    ports:
+      - "9091:9091"
+    restart: unless-stopped
+
   # ── Grafana (dashboards) ────────────────────────────────────────
   grafana:
     image: grafana/grafana:12.0.0
