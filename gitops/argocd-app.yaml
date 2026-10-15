@@ -9,7 +9,7 @@ spec:
   project: default
   source:
     repoURL: https://github.com/KanzaKashaf/ModelOps.git
-    targetRevision: feature/phase-8-helm-gitops
+    targetRevision: main
     path: charts/modelops-serving
     helm:
       valueFiles:

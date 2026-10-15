@@ -9,6 +9,11 @@ nodes:
         nodeRegistration:
           kubeletExtraArgs:
             node-labels: "ingress-ready=true"
+      - |
+        kind: KubeletConfiguration
+        resolvConf: "/etc/resolv.conf"
+        healthzBindAddress: "0.0.0.0"
+        healthzPort: 10248
     extraPortMappings:
       - containerPort: 30080
         hostPort: 8080
@@ -16,8 +21,6 @@ nodes:
       - containerPort: 30443
         hostPort: 8443
         protocol: TCP
-  - role: worker
-  - role: worker
 containerdConfigPatches:
   - |-
     [plugins."io.containerd.grpc.v1.cri".containerd.runtimes.runc.options]
