@@ -55,28 +55,33 @@ def compute_drift(
     report_dict = report.as_dict()
     metrics = report_dict.get("metrics", []) if isinstance(report_dict, dict) else []
 
-    # Evidently 0.4.x may emit DatasetDriftMetric or DataDriftTable.
+    # Evidently 0.4.x emits multiple drift metrics with overlapping fields.
+    # Prefer the table when present, recompute share from counts so the
+    # number and the share never disagree.
+    table = None
+    dataset = None
     for metric in metrics:
         name = metric.get("metric")
-        if name in ("DataDriftTable", "DatasetDriftMetric"):
-            r = metric.get("result", {})
-            share = (
-                r.get("share_of_drifted_columns")
-                or r.get("drift_share")
-                or 0.0
-            )
-            n_drifted = (
-                r.get("number_of_drifted_columns")
-                or r.get("count_of_drifted_columns")
-                or 0
-            )
-            n_columns = r.get("number_of_columns") or 0
-            return {
-                "dataset_drift": bool(r.get("dataset_drift", False)),
-                "share_drifted": float(share),
-                "n_drifted": int(n_drifted),
-                "n_columns": int(n_columns),
-            }
+        if name == "DataDriftTable":
+            table = metric.get("result", {})
+        elif name == "DatasetDriftMetric":
+            dataset = metric.get("result", {})
+
+    source = table or dataset
+    if source:
+        n_columns = int(source.get("number_of_columns") or 0)
+        n_drifted = int(
+            source.get("number_of_drifted_columns")
+            or source.get("count_of_drifted_columns")
+            or 0
+        )
+        share = (n_drifted / n_columns) if n_columns > 0 else 0.0
+        return {
+            "dataset_drift": bool(source.get("dataset_drift", False)),
+            "share_drifted": float(share),
+            "n_drifted": int(n_drifted),
+            "n_columns": int(n_columns),
+        }
 
     logger.warning("No drift metric found in Evidently report; returning zeros")
     return {"dataset_drift": False, "share_drifted": 0.0, "n_drifted": 0, "n_columns": 0}
