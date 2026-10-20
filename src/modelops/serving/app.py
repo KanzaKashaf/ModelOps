@@ -16,7 +16,6 @@ from prometheus_fastapi_instrumentator import Instrumentator
 from modelops.serving.config import get_settings
 from modelops.serving.middleware import RequestIDMiddleware
 from modelops.serving.model_loader import load_model
-from modelops.serving.size_limit import RequestSizeLimitMiddleware
 from modelops.serving.schemas import (
     HealthLiveResponse,
     HealthReadyResponse,
@@ -24,6 +23,7 @@ from modelops.serving.schemas import (
     PredictRequest,
     PredictResponse,
 )
+from modelops.serving.size_limit import RequestSizeLimitMiddleware
 
 logger = logging.getLogger(__name__)
 

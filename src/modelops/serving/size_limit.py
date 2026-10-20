@@ -41,7 +41,7 @@ class RequestSizeLimitMiddleware(BaseHTTPMiddleware):
                         )
                     },
                 )
-        
+
         # If Content-Length is missing, check the actual body size
         # (urllib.request doesn't send Content-Length for bytes bodies)
         try:
