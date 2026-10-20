@@ -28,6 +28,7 @@ services:
       context: .
       dockerfile: Dockerfile
     image: modelops-serving:${GIT_SHA:-local}
+    pull_policy: never
     container_name: modelops-serving
     depends_on:
       mlflow:

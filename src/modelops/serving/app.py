@@ -16,6 +16,7 @@ from prometheus_fastapi_instrumentator import Instrumentator
 from modelops.serving.config import get_settings
 from modelops.serving.middleware import RequestIDMiddleware
 from modelops.serving.model_loader import load_model
+from modelops.serving.size_limit import RequestSizeLimitMiddleware
 from modelops.serving.schemas import (
     HealthLiveResponse,
     HealthReadyResponse,
@@ -116,6 +117,8 @@ async def lifespan(app: FastAPI):
 
 def create_app() -> FastAPI:
     """Create and configure the FastAPI application."""
+    settings = get_settings()
+
     app = FastAPI(
         title="ModelOps Serving API",
         version="1.0.0",
@@ -124,6 +127,13 @@ def create_app() -> FastAPI:
     )
 
     app.add_middleware(RequestIDMiddleware)
+
+    # Reject oversized request bodies before they are read into memory.
+    # The limit comes from ServingSettings.max_request_bytes (default 64 KB).
+    app.add_middleware(
+        RequestSizeLimitMiddleware,
+        max_bytes=settings.max_request_bytes,
+    )
 
     Instrumentator(
         should_group_status_codes=True,
