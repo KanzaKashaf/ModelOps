@@ -1,0 +1,114 @@
+{
+  "title": "k6 Load Test Results",
+  "uid": "modelops-k6-load-test",
+  "tags": ["modelops", "k6", "load-test"],
+  "timezone": "browser",
+  "schemaVersion": 39,
+  "version": 1,
+  "refresh": "10s",
+  "time": { "from": "now-30m", "to": "now" },
+  "panels": [
+    {
+      "id": 1,
+      "title": "Virtual Users",
+      "type": "timeseries",
+      "gridPos": { "h": 8, "w": 8, "x": 0, "y": 0 },
+      "targets": [
+        {
+          "expr": "k6_vus",
+          "legendFormat": "active VUs"
+        }
+      ]
+    },
+    {
+      "id": 2,
+      "title": "Request Rate",
+      "type": "timeseries",
+      "gridPos": { "h": 8, "w": 8, "x": 8, "y": 0 },
+      "targets": [
+        {
+          "expr": "sum(rate(k6_http_reqs_total[1m]))",
+          "legendFormat": "requests/s"
+        }
+      ]
+    },
+    {
+      "id": 3,
+      "title": "P95 Latency",
+      "type": "timeseries",
+      "gridPos": { "h": 8, "w": 8, "x": 16, "y": 0 },
+      "targets": [
+        {
+          "expr": "k6_http_req_duration_p95",
+          "legendFormat": "p95 latency (ms)"
+        }
+      ]
+    },
+    {
+      "id": 4,
+      "title": "Error Rate (HTTP failures)",
+      "type": "timeseries",
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 8 },
+      "targets": [
+        {
+          "expr": "k6_http_req_failed_rate",
+          "legendFormat": "failure rate"
+        }
+      ]
+    },
+    {
+      "id": 5,
+      "title": "Checks Pass Rate",
+      "type": "stat",
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 8 },
+      "targets": [
+        {
+          "expr": "k6_checks_rate",
+          "instant": true,
+          "legendFormat": "checks passing"
+        }
+      ],
+      "options": {
+        "colorMode": "value",
+        "graphMode": "area",
+        "unit": "percentunit",
+        "thresholds": {
+          "mode": "absolute",
+          "steps": [
+            { "color": "red", "value": null },
+            { "color": "yellow", "value": 0.95 },
+            { "color": "green", "value": 0.99 }
+          ]
+        }
+      }
+    },
+    {
+      "id": 6,
+      "title": "Iterations per Second",
+      "type": "timeseries",
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 16 },
+      "targets": [
+        {
+          "expr": "sum(rate(k6_iterations_total[1m]))",
+          "legendFormat": "iterations/s"
+        }
+      ]
+    },
+    {
+      "id": 7,
+      "title": "Prediction Latency (custom metric)",
+      "type": "timeseries",
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 16 },
+      "targets": [
+        {
+          "expr": "k6_modelops_loadtest_prediction_latency_p95",
+          "legendFormat": "p95"
+        },
+        {
+          "expr": "k6_modelops_loadtest_prediction_latency_avg",
+          "legendFormat": "avg"
+        }
+      ]
+    }
+  ]
+}

@@ -28,6 +28,7 @@ services:
       context: .
       dockerfile: Dockerfile
     image: modelops-serving:${GIT_SHA:-local}
+    pull_policy: never
     container_name: modelops-serving
     depends_on:
       mlflow:
@@ -55,15 +56,21 @@ services:
   prometheus:
     image: prom/prometheus:v3.4.0
     container_name: modelops-prometheus
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--web.enable-remote-write-receiver'
+      - '--storage.tsdb.retention.time=7d'
     ports:
       - "9090:9090"
     volumes:
       - ./docker/prometheus.yml:/etc/prometheus/prometheus.yml:ro
       - ./monitoring/alerts:/etc/prometheus/rules:ro
       - prometheus-data:/prometheus
-    depends_on:
-      serving:
-        condition: service_healthy
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 512M
     restart: unless-stopped
 
   pushgateway:
