@@ -15,7 +15,7 @@ from __future__ import annotations
 
 import json
 import sys
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
 
 # Ensure src/ is on the path
@@ -25,7 +25,7 @@ from modelops.data.loader import load_dataset
 from modelops.data.split import split_dataset
 from modelops.data.validation import validate_dataset
 from modelops.governance.promotion import PromotionPolicy, evaluate_promotion
-from modelops.tracking.config import ensure_experiment, set_tracking_uri
+from modelops.tracking.config import ensure_experiment
 from modelops.tracking.manifest import build_manifest, get_registered_version, write_manifest
 from modelops.tracking.metadata import collect_run_metadata
 from modelops.training.train_mlflow import REGISTERED_MODEL_NAME, train_and_log
@@ -36,7 +36,6 @@ MANIFEST_DIR = Path("manifests")
 
 def run_retraining(seed: int = 42) -> dict:
     """Run the full retraining and evaluation workflow."""
-    set_tracking_uri()
     ensure_experiment()
 
     # 1. Load and validate data
@@ -87,7 +86,7 @@ def run_retraining(seed: int = 42) -> dict:
 
     # 5. Write evaluation report
     report = {
-        "timestamp": datetime.now(timezone.utc).isoformat(),
+        "timestamp": datetime.now(UTC).isoformat(),
         "seed": seed,
         "train_data_hash": run_metadata["train_data_hash"],
         "git_commit": run_metadata["git_commit"],
