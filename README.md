@@ -1,143 +1,201 @@
 # ModelOps Platform
 
-A production-style MLOps platform demonstrating the complete ML and DevOps lifecycle.
+[![CI](https://github.com/KanzaKashaf/ModelOps/actions/workflows/ci.yml/badge.svg)](https://github.com/KanzaKashaf/ModelOps/actions/workflows/ci.yml)
 
-## Setup
+A production-style MLOps platform demonstrating the complete machine learning and DevOps lifecycle: data validation, reproducible training, experiment tracking, model governance, API serving, CI/CD, containerisation, observability, drift monitoring, incident response, and retraining.
 
-See [docs/windows-setup.md](docs/windows-setup.md) for Windows setup instructions.
-
-## Local Linting Note (Windows)
-
-If `ruff check .` is blocked by a WDAC (Windows Defender Application Control) policy with error 4551, local linting is unavailable. Use the CI workflow instead—Ruff runs on `ubuntu-latest` where no such policy exists. Run `pytest` locally and rely on the PR check for linting.
+**Local-first.** No paid cloud services are required. The supported local runtime uses Docker Compose.
 
 ## Architecture
 
-See [docs/architecture.md](docs/architecture.md).
+```text
+Developer Workflow
+Git commit -> GitHub Actions CI -> Docker image -> Docker Compose
+                                |
+                                v
++-----------------------------------------------------------+
+|                  Docker Compose (Local)                   |
+|                                                           |
+|  +----------+  +----------+  +------------+  +----------+ |
+|  |  MLflow  |  | Serving  |  | Prometheus |  | Grafana  | |
+|  |  :5000   |  |  :8000   |  |   :9090    |  |  :3000   | |
+|  +----------+  +----------+  +------------+  +----------+ |
+|                                                           |
+|  +----------------+                                       |
+|  |  Pushgateway   |  <- Drift metrics from Evidently      |
+|  |     :9091      |                                       |
+|  +----------------+                                       |
++-----------------------------------------------------------+
+                                |
+                                v
++-----------------------------------------------------------+
+|                    ML Lifecycle                           |
+|                                                           |
+| Data validation -> Training -> MLflow tracking            |
+| -> Evaluation -> Promotion gate -> Champion model         |
+| -> Serving API -> Drift detection -> Retraining           |
++-----------------------------------------------------------+
+```
 
-## Branch Strategy
+### Runtime Scope
 
-- `main` — protected branch, always deployable.
-- Feature branches: `feature/<short-description>`
-- Pull requests require passing CI before merge.
+**What runs locally:** MLflow, the serving API, Prometheus, Grafana, Pushgateway, and the training and evaluation workflows.
 
+**What is simulated or omitted:** Kubernetes and Helm manifests, where present, document a production deployment pattern. Docker Compose is the supported local runtime because of the machine's 8 GB RAM constraint. No cloud resources are created. Argo CD GitOps was demonstrated in an earlier phase, but the local kind cluster was removed to free resources.
 
-## Model Governance
+## Quick Start
 
-Model promotion is gated by deterministic quality criteria. See
-[docs/model-governance.md](docs/model-governance.md) for the policy,
-workflow, and rollback procedure.
+### Prerequisites
 
-Quick start:
+- Windows 10/11 with WSL 2 and Ubuntu
+- Docker Desktop with WSL 2 integration
+- Python 3.12+
+- `uv`
 
-```powershell
-# Start MLflow (separate terminal)
-.\scripts\start_mlflow.ps1
+### Setup
 
-# Train and register candidates
-python -m modelops.training.train_mlflow
-
-# Evaluate promotion (dry-run)
-python scripts/promote_model.py manifests/gradient_boosting-v9.json --dry-run
-
-# Promote if approved
-python scripts/promote_model.py manifests/gradient_boosting-v9.json
-
-
-## Serving API
-
-Start the API (requires the local champion artifact or a running
-MLflow server):
-
-```bash
-python -m modelops.serving
-
-
-```markdown
-# ModelOps Platform
-
-[![CI](https://github.com/KanzaKashaf/ModelOps/actions/workflows/ci.yml/badge.svg)](https://github.com/KanzaKashaf/ModelOps/actions/workflows/ci.yml)
-
-A production-style MLOps platform...
-
-
-## CI/CD
-
-Continuous integration runs on GitHub Actions. See
-[docs/ci-cd.md](docs/ci-cd.md) for the job inventory, path-based
-gating rules, security tooling, and the model-contract contract.
-
-The pipeline includes:
-- Ruff linting and pytest unit tests
-- Data validation, training smoke test, and model reload tests
-- MLflow tracking, promotion gate, and champion promotion
-- Serving API contract tests and OpenAPI schema validation
-- Model-contract tests (schema alignment between training and serving)
-- Security scanning: Bandit (SAST), pip-audit (SCA), Gitleaks (secrets)
-- Test report aggregation into the PR summary
-
-
-```markdown
-## Infrastructure as Code
-
-The local Docker resources are also declarative via Terraform in
-`infra/local-docker/`. This is a learning exercise that demonstrates
-providers, resources, variables, outputs, state, and dependency
-graphs — on a zero-cost, local target.
+Clone the repository and enter its directory:
 
 ```bash
-cd infra/local-docker
-terraform init
-terraform plan -var="image_tag=$(git rev-parse --short HEAD)" -var="model_path=$(pwd)/../../models"
+git clone https://github.com/KanzaKashaf/ModelOps.git
+cd ModelOps
+```
 
-
-```markdown
-## Kubernetes
-
-The serving API is deployed to a local kind cluster with a Deployment, ClusterIP Service, ConfigMap, Secret, and PersistentVolumeClaim.
+Install `uv` if it is not already available:
 
 ```bash
-# Create the cluster
-kind create cluster --config k8s/kind-config.yaml
+python3 -m pip install --user uv
+```
 
-# Apply the manifests
-kubectl apply -f k8s/namespace.yaml
-kubectl apply -f k8s/configmap.yaml
-kubectl apply -f k8s/pv-model.yaml
-kubectl apply -f k8s/pvc-model.yaml
-kubectl apply -f k8s/deployment.yaml
-kubectl apply -f k8s/service.yaml
+If `uv` is not found after installation, reopen the terminal or ensure its installation directory is on your PATH.
 
-# Port-forward and test
-kubectl port-forward -n modelops svc/modelops-serving 8081:80
-curl http://127.0.0.1:8081/health/ready
-
-
-
-```markdown
-## GitOps
-
-The serving chart is reconciled by Argo CD from
-`gitops/argocd-app.yaml`. See [docs/gitops.md](docs/gitops.md)
-for sync policy, drift correction, and rollback procedures.
+Create a virtual environment and install the project:
 
 ```bash
-# Port-forward Argo CD UI
-kubectl port-forward svc/argocd-server -n argocd 8090:443
+uv venv
+uv pip install -e ".[dev]"
+```
 
-# Port-forward serving API
-kubectl port-forward -n modelops svc/modelops-serving 8081:80
+Generate the reference dataset:
 
+```bash
+uv run python -m modelops.monitoring.reference
+```
 
+Build the serving image:
 
-```markdown
-## Monitoring
+```bash
+chmod +x scripts/build_image.sh
+./scripts/build_image.sh
+```
 
-The platform ships with Prometheus, Grafana, and a Pushgateway in the
-Compose stack. Application metrics come from the serving API; drift
-metrics come from the Evidently job.
+Start the services:
 
 ```bash
 docker compose up -d
+```
 
-# Prometheus: http://localhost:9090
-# Grafana:    http://localhost:3000 (admin / $GRAFANA_ADMIN_PASSWORD)
+Check service status:
+
+```bash
+docker compose ps
+```
+
+Verify the serving API:
+
+```bash
+curl -fsS http://localhost:8000/health/live
+```
+
+### Service URLs
+
+| Service | Local URL |
+|---|---|
+| Serving API | http://localhost:8000 |
+| API documentation | http://localhost:8000/docs |
+| MLflow | http://localhost:5000 |
+| Prometheus | http://localhost:9090 |
+| Grafana | http://localhost:3000 |
+| Pushgateway | http://localhost:9091 |
+
+The availability of individual endpoints depends on the Compose configuration and enabled services.
+
+## Run the Full Pipeline
+
+Run these commands from the repository root.
+
+### 1. Train and evaluate candidate models
+
+```bash
+uv run python scripts/retrain_and_evaluate.py
+```
+
+### 2. Review the evaluation report
+
+```bash
+cat reports/retraining_evaluation.json
+```
+
+### 3. Promote an approved candidate
+
+```bash
+uv run python scripts/promote_model.py manifests/gradient_boosting-v3.json
+```
+
+Promotion should follow the evaluation results and the project's governance rules. Confirm that the manifest exists and identifies the intended candidate before running this command.
+
+### 4. Restart the serving service
+
+```bash
+docker compose restart serving
+```
+
+### 5. Verify the active model
+
+```bash
+curl -fsS http://localhost:8000/v1/model/info
+```
+
+## What This Demonstrates
+
+| Capability | Implementation |
+|---|---|
+| Reproducible training | Fixed random seed, deterministic data splitting, Pandera schema validation |
+| Experiment tracking | MLflow with SQLite backend, parameters, metrics, tags, and artifacts |
+| Model governance | Promotion gates, champion alias, manifests, SHA-256 checksums |
+| Model serving | FastAPI, typed schemas, request IDs, health probes |
+| CI/CD | GitHub Actions, path-based workflow gating, automated quality checks, security scans |
+| Containerisation | Multi-stage Docker build, non-root execution, Trivy scanning |
+| Observability | Prometheus metrics, Grafana dashboards, SLO alerts, operational runbooks |
+| Drift monitoring | Evidently reports, Pushgateway integration, drift alerts |
+| Incident response | Failure drills, postmortems, rollback procedures |
+| Retraining | Candidate evaluation pipeline with a human approval gate |
+
+## Documentation
+
+| Document | Path |
+|---|---|
+| Data card | `docs/data-card.md` |
+| Model card | `docs/model-card.md` |
+| Model governance | `docs/model-governance.md` |
+| Serving API | `docs/serving-api.md` |
+| CI/CD | `docs/ci-cd.md` |
+| Docker | `docs/docker.md` |
+| Monitoring | `docs/monitoring.md` |
+| SLOs | `docs/slo.md` |
+| Threat model | `docs/threat-model.md` |
+| Runbooks | `docs/runbooks/` |
+| Release checklist | `docs/release-checklist.md` |
+| Incident postmortems | `docs/incidents/` |
+
+## Limitations
+
+- **Local-first, not production:** This is a learning and portfolio platform, not a highly available production system.
+- **Hardware constraints:** The Kubernetes/Helm/GitOps environment was demonstrated separately. Docker Compose is the supported local runtime for an 8 GB RAM machine.
+- **Public dataset:** The California Housing dataset is used for experimentation; no private user data is required.
+- **No cloud resources:** The local workflow does not require AWS, GCP, or Azure resources.
+- **Drift is not accuracy:** Data drift indicates a change in input distributions; it does not independently establish a decline in model accuracy.
+
+## License
+
+See the repository for license information.
